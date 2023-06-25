@@ -1,14 +1,29 @@
 ---
-- name: Collect OS Information
+- name: Patch OS
   hosts: all
-  gather_facts: yes
   become: true
-
+  gather_facts: true
+  
   tasks:
-    - name: Display OS Information
-      debug:
-        msg: |
-          OS: {{ ansible_distribution | default('Unknown') }}
-          Version: {{ ansible_distribution_version | default('Unknown') }}
-          Architecture: {{ ansible_architecture | default('Unknown') }}
-          Kernel: {{ ansible_kernel | default('Unknown') }}
+    - name: Update package cache
+      apt:
+        update_cache: yes
+      when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
+
+    - name: Update package cache
+      dnf:
+        update_cache: yes
+      when: ansible_distribution == 'AlmaLinux' or ansible_distribution == 'RedHat'
+
+    - name: Upgrade packages
+      apt:
+        upgrade: dist
+        autoremove: yes
+        autoclean: yes
+      when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
+
+    - name: Upgrade packages
+      dnf:
+        name: '*'
+        state: latest
+      when: ansible_distribution == 'AlmaLinux' or ansible_distribution == 'RedHat'
